@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body, html {
             height: 100%;
@@ -12,6 +13,7 @@
             background-color: #f0f0f0;
             overflow: hidden; /* Prevent scrolling */
             touch-action: none; /* Prevent pinch to zoom */
+            font-size: 16px; /* Base font size for scaling */
         }
 
         .container {
@@ -33,6 +35,8 @@
             position: relative;
             overflow: hidden; /* Keep this as 'hidden' */
             margin-bottom: 8px; /* Maintain consistent spacing */
+            max-width: 100%;
+            max-height: 100%;
         }
 
         #camera-stream {
@@ -118,7 +122,7 @@
         }
 
         .haiku-line {
-            font-size: 16px;
+            font-size: 1em; /* Use em to scale with the base font size */
             color: black;
             background-color: white;
             padding: 8px 10px; /* Increase padding */
@@ -130,7 +134,7 @@
         }
 
         #instruction-text {
-            font-size: 18px;
+            font-size: 1.125em; /* Slightly larger than base font size */
             color: #333;
             margin-bottom: 24px; /* Maintain consistent spacing */
             text-align: center;
@@ -527,3 +531,4 @@
     </script>
 </body>
 </html>
+
