@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #f0f0f0;
+            overflow: hidden; /* Prevent scrolling */
+            touch-action: none; /* Prevent pinch to zoom */
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative; /* For positioning the close button outside the camera block */
+        }
+
+        #camera-block {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 322px;
+            height: 322px;
+            border-radius: 20px;
+            border: 4px solid #5B415D;
+            position: relative;
+            overflow: hidden; /* Keep this as 'hidden' */
+            margin-bottom: 8px; /* Maintain consistent spacing */
+        }
+
+        #camera-stream {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 18px;
+        }
+
+        #capture-button, #send-button {
+            width: 76px;
+            height: 76px;
+            border-radius: 100px;
+            border: 6px solid transparent; /* Ensure no visible border */
+            background-color: transparent;
+            cursor: pointer;
+            transition: transform 0.2s;
+            outline: none;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 32px;
+            margin-top: 8px; /* Maintain consistent spacing */
+        }
+
+        #capture-button {
+            border: 6px solid #AC8DAF; /* Purple border for capture button */
+        }
+
+        #send-button {
+            display: none;
+            background-color: #3D9ACC; /* Blue background for send button */
+            background-image: url('https://uploads-ssl.webflow.com/666644756f0e47b6407ce49c/6690562939a9c723b376c755_IoPaperPlane.png');
+            background-size: 32px; /* Adjust background size to match icon size */
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.4);
+            display: none;
+            border-radius: 18px;
+        }
+
+        #close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            background: url('https://uploads-ssl.webflow.com/666644756f0e47b6407ce49c/6695d3ac001e82f6fbf3f2a9_Close_round.png') no-repeat center;
+            background-size: cover;
+            display: none;
+            cursor: pointer;
+            border: none;
+            z-index: 20;
+            filter: drop-shadow(0px 0px 4px rgba(0, 0, 0, 0.7)); /* Add drop shadow */
+        }
+
+        #flip-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            background: url('https://uploads-ssl.webflow.com/666644756f0e47b6407ce49c/669969f71d7fd7241ce7e022_flip_camera_android.png') no-repeat center;
+            background-size: cover;
+            display: block;
+            cursor: pointer;
+            border: none;
+            z-index: 20;
+            filter: drop-shadow(0px 0px 4px rgba(0, 0, 0, 0.7)); /* Add drop shadow */
+        }
+
+        #haikuDisplay {
+            position: absolute;
+            text-align: left;
+            cursor: move; /* Change cursor to indicate draggable element */
+            z-index: 10; /* Ensure the haikuDisplay is above other elements */
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        .haiku-line {
+            font-size: 16px;
+            color: black;
+            background-color: white;
+            padding: 8px 10px; /* Increase padding */
+            margin: 0; /* Remove margin between lines */
+            margin-bottom: 3px; /* Add spacing between lines */
+            border-radius: 0;
+            display: block; /* Ensure each line is block-level */
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        #instruction-text {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 24px; /* Maintain consistent spacing */
+            text-align: center;
+        }
+
+        #down-arrow {
+            display: block;
+            opacity: 0; /* Set initial opacity to 0 */
+            width: 20px; /* Adjust size of the arrow */
+            height: auto;
+            margin-top: 8px; /* Maintain consistent spacing */
+            transition: opacity 0.4s ease; /* Add transition for smooth visibility change */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="instruction-text">Take a picture to make your Ku ❤️</div>
+        <div id="camera-block">
+            <video id="camera-stream" autoplay muted playsinline></video>
+            <div id="overlay"></div>
+            <div id="haikuDisplay"></div>
+            <button id="close-button" onclick="resetCamera()"></button>
+            <button id="flip-button" onclick="flipCamera()"></button>
+        </div>
+        <img id="down-arrow" src="https://uploads-ssl.webflow.com/666644756f0e47b6407ce49c/66974c7a15eb5b0678578742_Vector%20123.png" alt="Down Arrow">
+        <button id="capture-button" onclick="capturePicture()"></button>
+        <button id="send-button" onclick="shareImage()"></button>
+    </div>
+
+    <script>
+        let videoStream;
+        let currentFacingMode = 'user';
+        const haikus = [
+            "Thoughts of you today\nWarm my heart like morning sun\nYou're always with me",
+            "Miles may separate\nBut my love spans the distance\nYou're close in my heart",
+            "Friendship's gentle thread\nWeaves through my daily moments\nYou're cherished always",
+            "Just a quick hello\nTo say you matter to me\nNow and forever",
+            "In life's rushing stream\nYou're my steady, strong boulder\nGrateful for your strength",
+            "Remembered laughter\nEchoes in quiet moments\nMissing you today",
+            "Your kindness lingers\nLike perfume on memory\nBlessed to know you",
+            "Thinking of you now\nMy heart swells with affection\nYou're deeply treasured",
+            "Time apart can't dim\nThe bright light of our friendship\nYou shine in my thoughts",
+            "Whisper to the wind\nCarrying my love to you\nHope it reaches you",
+            "Each day I'm thankful\nFor the gift of your friendship\nYou enrich my world",
+            "Autumn leaves falling\nRemind me of your warm hues\nColoring my life",
+            "In joy or sorrow\nKnow that I hold you closely\nIn my caring thoughts",
+            "Quiet reflection\nBrings your smile to my mind's eye\nCherished memory",
+            "Gentle reminder\nSent across the miles to you:\nYou're loved, dear friend",
+            "Your spirit's echo\nResonates within my soul\nForever bonded",
+            "Friendship's warm embrace\nSurrounds me even when you're\nFar from where I am",
+            "Just a little note\nTo say you're in my heartspace\nAlways and always",
+            "Fondness overflows\nLike a cup of sweet tea shared\nYou're my favorite blend",
+            "Stars twinkle brightly\nLike the spark of our friendship\nConstant through the night"
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initCamera();
+            makeHaikuDraggable();
+            disablePinchZoom();
+        });
+
+        async function generateHaikuFromImage(imageDataUrl) {
+            try {
+                const response = await fetch('/api/generate-haiku', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ imageDataUrl }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content.trim();
+            } catch (error) {
+                console.error('Failed to generate haiku:', error);
+                throw error;
+            }
+        }
+
+        function capturePicture() {
+            const video = document.getElementById('camera-stream');
+            const overlay = document.getElementById('overlay');
+            const haikuDisplay = document.getElementById('haikuDisplay');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const instructionText = document.getElementById('instruction-text');
+            const flipButton = document.getElementById('flip-button');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            if (currentFacingMode === 'user') {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageDataUrl = canvas.toDataURL('image/png');
+            overlay.style.display = 'block';
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                const closeButton = document.getElementById('close-button');
+                closeButton.style.display = 'block';
+                document.getElementById('camera-block').style.backgroundImage = `url('${imageDataUrl}')`;
+                document.getElementById('camera-block').style.backgroundSize = 'cover';
+                document.getElementById('camera-block').style.backgroundPosition = 'center';
+                video.style.display = 'none'; // Hide the video element
+                flipButton.style.display = 'none'; // Hide the flip button
+                videoStream.getTracks().forEach(track => track.stop());
+
+                instructionText.innerText = '🍃 Generating your Ku...';
+
+                generateHaikuFromImage(imageDataUrl)
+                    .then(haiku => {
+                        // Display haiku line by line
+                        const haikuLines = haiku.split('\n');
+                        haikuDisplay.innerHTML = '';
+                        let lineIndex = 0;
+
+                        function displayNextLine() {
+                            if (lineIndex < haikuLines.length) {
+                                const line = document.createElement('div');
+                                line.innerText = haikuLines[lineIndex];
+                                line.className = 'haiku-line';
+                                haikuDisplay.appendChild(line);
+                                lineIndex++;
+                                setTimeout(displayNextLine, 400); // Adjust timing as needed
+                            }
+                        }
+
+                        displayNextLine();
+
+                        // Show the send button and hide the capture button
+                        document.getElementById('capture-button').style.display = 'none';
+                        document.getElementById('send-button').style.display = 'block';
+
+                        // Update instruction text
+                        instructionText.innerText = '👆 Drag your haiku around!';
+                    })
+                    .catch(error => {
+                        console.error('Failed to generate haiku:', error);
+                        alert('Failed to generate haiku. Please try again.');
+                        resetCamera();
+                    });
+            }, 100);
+        }
+
+        function resetCamera() {
+            const video = document.getElementById('camera-stream');
+            const closeButton = document.getElementById('close-button');
+            const haikuDisplay = document.getElementById('haikuDisplay');
+            const captureButton = document.getElementById('capture-button');
+            const sendButton = document.getElementById('send-button');
+            const flipButton = document.getElementById('flip-button');
+            const instructionText = document.getElementById('instruction-text');
+            const downArrow = document.getElementById('down-arrow');
+
+            closeButton.style.display = 'none';
+            haikuDisplay.innerHTML = '';
+            document.getElementById('camera-block').style.backgroundImage = 'none';
+            captureButton.style.display = 'block';
+            sendButton.style.display = 'none';
+            flipButton.style.display = 'block';
+            downArrow.style.opacity = '0'; // Hide the arrow by setting opacity to 0
+            instructionText.innerText = 'Take a picture to make your Ku ❤️';
+
+            video.style.display = 'block'; // Show the video element
+            initCamera();
+        }
+
+        function makeHaikuDraggable() {
+            const haikuDisplay = document.getElementById('haikuDisplay');
+            const instructionText = document.getElementById('instruction-text');
+            const downArrow = document.getElementById('down-arrow');
+            let isDragging = false;
+            let startX, startY;
+            let dragTimeout;
+
+            haikuDisplay.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX - haikuDisplay.offsetLeft;
+                startY = e.clientY - haikuDisplay.offsetTop;
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+                // Update instruction text on drag start after 0.4 seconds
+                clearTimeout(dragTimeout);
+                dragTimeout = setTimeout(() => {
+                    instructionText.innerText = 'Share with your friends 🥰👇';
+                    setTimeout(() => {
+                        downArrow.style.opacity = '1'; // Show the arrow by setting opacity to 1
+                    }, 1000); // Show the arrow after 1 second
+                }, 400);
+            });
+
+            haikuDisplay.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                const touch = e.touches[0];
+                startX = touch.clientX - haikuDisplay.offsetLeft;
+                startY = touch.clientY - haikuDisplay.offsetTop;
+                document.addEventListener('touchmove', onTouchMove);
+                document.addEventListener('touchend', onTouchEnd);
+                // Update instruction text on drag start after 0.4 seconds
+                clearTimeout(dragTimeout);
+                dragTimeout = setTimeout(() => {
+                    instructionText.innerText = 'Share with your friends 🥰👇';
+                    setTimeout(() => {
+                        downArrow.style.opacity = '1'; // Show the arrow by setting opacity to 1
+                    }, 1000); // Show the arrow after 1 second
+                }, 400);
+            });
+
+            function onMouseMove(e) {
+                if (isDragging) {
+                    const cameraBlock = document.getElementById('camera-block');
+                    const rect = cameraBlock.getBoundingClientRect();
+                    const haikuRect = haikuDisplay.getBoundingClientRect();
+
+                    let newX = e.clientX - startX;
+                    let newY = e.clientY - startY;
+
+                    // Ensure the haiku stays within the camera block
+                    newX = Math.max(0, Math.min(newX, rect.width - haikuRect.width));
+                    newY = Math.max(0, Math.min(newY, rect.height - haikuRect.height));
+
+                    haikuDisplay.style.left = `${newX}px`;
+                    haikuDisplay.style.top = `${newY}px`;
+                }
+            }
+
+            function onTouchMove(e) {
+                if (isDragging) {
+                    const touch = e.touches[0];
+                    const cameraBlock = document.getElementById('camera-block');
+                    const rect = cameraBlock.getBoundingClientRect();
+                    const haikuRect = haikuDisplay.getBoundingClientRect();
+
+                    let newX = touch.clientX - startX;
+                    let newY = touch.clientY - startY;
+
+                    // Ensure the haiku stays within the camera block
+                    newX = Math.max(0, Math.min(newX, rect.width - haikuRect.width));
+                    newY = Math.max(0, Math.min(newY, rect.height - haikuRect.height));
+
+                    haikuDisplay.style.left = `${newX}px`;
+                    haikuDisplay.style.top = `${newY}px`;
+                }
+            }
+
+            function onMouseUp() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+
+            function onTouchEnd() {
+                isDragging = false;
+                document.removeEventListener('touchmove', onTouchMove);
+                document.removeEventListener('touchend', onTouchEnd);
+            }
+        }
+
+        function initCamera() {
+            const video = document.getElementById('camera-stream');
+            const constraints = {
+                video: {
+                    facingMode: currentFacingMode
+                }
+            };
+
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function(stream) {
+                        videoStream = stream;
+                        video.srcObject = stream;
+                        video.play();
+                        if (currentFacingMode === 'user') {
+                            video.style.transform = 'scaleX(-1)'; // Mirror the video for front-facing camera
+                        } else {
+                            video.style.transform = 'scaleX(1)'; // Do not mirror the video for back-facing camera
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error("Cannot access camera", error);
+                        alert('Error accessing the camera. Please ensure camera permissions are granted.');
+                    });
+            } else {
+                alert('Your browser does not support camera access.');
+            }
+        }
+
+        function flipCamera() {
+            currentFacingMode = currentFacingMode === 'user' ? { exact: 'environment' } : 'user';
+            resetCamera();
+        }
+
+        function disablePinchZoom() {
+            document.addEventListener('touchmove', function(event) {
+                if (event.scale !== 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('gesturestart', function(event) {
+                event.preventDefault();
+            });
+            document.addEventListener('gesturechange', function(event) {
+                event.preventDefault();
+            });
+            document.addEventListener('gestureend', function(event) {
+                event.preventDefault();
+            });
+        }
+
+        function shareImage() {
+            const cameraBlock = document.getElementById('camera-block');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas dimensions to a higher resolution
+            const scale = 4; // Increase this for even higher resolution
+            canvas.width = cameraBlock.clientWidth * scale;
+            canvas.height = cameraBlock.clientHeight * scale;
+
+            // Draw the camera block background (captured image)
+            const backgroundImage = new Image();
+            backgroundImage.crossOrigin = "Anonymous";
+            backgroundImage.src = cameraBlock.style.backgroundImage.replace(/url\(['"]?(.*?)['"]?\)/i, '$1');
+            
+            backgroundImage.onload = () => {
+                // Calculate aspect ratio
+                const aspectRatio = backgroundImage.width / backgroundImage.height;
+                let drawWidth = canvas.width;
+                let drawHeight = canvas.width / aspectRatio;
+                
+                if (drawHeight < canvas.height) {
+                    drawHeight = canvas.height;
+                    drawWidth = canvas.height * aspectRatio;
+                }
+
+                const x = (canvas.width - drawWidth) / 2;
+                const y = (canvas.height - drawHeight) / 2;
+
+                // Draw the background image maintaining aspect ratio
+                ctx.drawImage(backgroundImage, x, y, drawWidth, drawHeight);
+
+                // Draw the haiku text
+                const haikuDisplay = document.getElementById('haikuDisplay');
+                const haikuLines = haikuDisplay.querySelectorAll('.haiku-line');
+                
+                ctx.textBaseline = 'middle'; // Change to 'middle' for vertical centering
+                ctx.font = `${16 * scale}px Arial`; // Adjust font size for higher resolution
+                haikuLines.forEach((line, index) => {
+                    const rect = line.getBoundingClientRect();
+                    const cameraRect = cameraBlock.getBoundingClientRect();
+                    
+                    const x = (rect.left - cameraRect.left) * scale;
+                    const y = (rect.top - cameraRect.top) * scale;
+                    
+                    // Draw background for each line
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(x, y, rect.width * scale, rect.height * scale);
+                    
+                    // Draw text
+                    ctx.fillStyle = 'black';
+                    const textY = y + (rect.height * scale / 2); // Center text vertically
+                    ctx.fillText(line.innerText, x + 10 * scale, textY);
+                });
+
+                shareCanvas(canvas);
+            };
+        }
+
+        function shareCanvas(canvas) {
+            canvas.toBlob(blob => {
+                const file = new File([blob], 'haiku-image.jpg', { type: 'image/jpeg' });
+                if (navigator.share) {
+                    navigator.share({
+                        files: [file],
+                        title: 'Check out this haiku!',
+                        text: 'Send me one back! 💕 https://bit.ly/4cIjO4d'
+                    }).then(() => console.log('Shared successfully'))
+                      .catch(error => console.log('Error sharing:', error));
+                } else {
+                    alert('Sharing is not supported on this browser.');
+                }
+            }, 'image/jpeg', 0.95);
+        }
+    </script>
+</body>
+</html>
