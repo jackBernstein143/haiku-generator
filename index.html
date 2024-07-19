@@ -122,19 +122,20 @@
         }
 
         .haiku-line {
-            font-size: 1em; /* Use em to scale with the base font size */
+            font-size: 16px; /* Use px to ensure consistency */
             color: black;
             background-color: white;
-            padding: 0 4px; /* Top/bottom padding 0, left/right padding 4px */
+            padding: 0 4px; /* Adjust padding */
             margin: 0; /* Remove margin between lines */
             margin-bottom: 3px; /* Add spacing between lines */
             border-radius: 0;
             display: block; /* Ensure each line is block-level */
             white-space: nowrap; /* Prevent text wrapping */
+            font-family: Arial, sans-serif; /* Ensure font consistency */
         }
 
         #instruction-text {
-            font-size: 1.125em; /* Slightly larger than base font size */
+            font-size: 18px; /* Slightly larger than base font size */
             color: #333;
             margin-bottom: 24px; /* Maintain consistent spacing */
             text-align: center;
@@ -492,7 +493,7 @@
                 
                 ctx.textBaseline = 'middle'; // Change to 'middle' for vertical centering
                 ctx.font = `${16 * scale}px Arial`; // Adjust font size for higher resolution
-                haikuLines.forEach((line) => {
+                haikuLines.forEach((line, index) => {
                     const rect = line.getBoundingClientRect();
                     const cameraRect = cameraBlock.getBoundingClientRect();
                     
@@ -506,7 +507,7 @@
                     // Draw text
                     ctx.fillStyle = 'black';
                     const textY = y + (rect.height * scale / 2); // Center text vertically
-                    ctx.fillText(line.innerText, x + 4 * scale, textY); // Add left/right padding of 4
+                    ctx.fillText(line.innerText, x + 4 * scale, textY); // Adjust for left padding
                 });
 
                 shareCanvas(canvas);
