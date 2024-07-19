@@ -121,7 +121,7 @@
             font-size: 16px;
             color: black;
             background-color: white;
-            padding: 0 4px; /* Reduced padding */
+            padding: 0 4px; /* Adjust padding */
             margin: 0; /* Remove margin between lines */
             margin-bottom: 3px; /* Add spacing between lines */
             border-radius: 0;
@@ -143,6 +143,39 @@
             height: auto;
             margin-top: 8px; /* Maintain consistent spacing */
             transition: opacity 0.4s ease; /* Add transition for smooth visibility change */
+        }
+
+        /* Media query for smaller screens */
+        @media (max-width: 768px) {
+            #camera-block {
+                width: 90vw;
+                height: 90vw;
+            }
+
+            #capture-button, #send-button {
+                width: 60px;
+                height: 60px;
+                background-size: 24px;
+            }
+
+            #close-button, #flip-button {
+                width: 24px;
+                height: 24px;
+            }
+
+            .haiku-line {
+                font-size: 14px;
+                padding: 0 2px; /* Adjust padding for smaller screens */
+            }
+
+            #instruction-text {
+                font-size: 16px;
+                margin-bottom: 16px;
+            }
+
+            #down-arrow {
+                width: 16px; /* Adjust size of the arrow */
+            }
         }
     </style>
 </head>
@@ -488,7 +521,7 @@
                 
                 ctx.textBaseline = 'middle'; // Change to 'middle' for vertical centering
                 ctx.font = `${16 * scale}px Arial`; // Adjust font size for higher resolution
-                haikuLines.forEach((line) => {
+                haikuLines.forEach((line, index) => {
                     const rect = line.getBoundingClientRect();
                     const cameraRect = cameraBlock.getBoundingClientRect();
                     
@@ -502,7 +535,7 @@
                     // Draw text
                     ctx.fillStyle = 'black';
                     const textY = y + (rect.height * scale / 2); // Center text vertically
-                    ctx.fillText(line.innerText, x + 4 * scale, textY); // Adjust text position for padding
+                    ctx.fillText(line.innerText, x + 4 * scale, textY); // Adjust padding for left/right
                 });
 
                 shareCanvas(canvas);
