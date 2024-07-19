@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body, html {
             height: 100%;
@@ -13,7 +12,6 @@
             background-color: #f0f0f0;
             overflow: hidden; /* Prevent scrolling */
             touch-action: none; /* Prevent pinch to zoom */
-            font-size: 16px; /* Base font size for scaling */
         }
 
         .container {
@@ -35,8 +33,6 @@
             position: relative;
             overflow: hidden; /* Keep this as 'hidden' */
             margin-bottom: 8px; /* Maintain consistent spacing */
-            max-width: 100%;
-            max-height: 100%;
         }
 
         #camera-stream {
@@ -122,10 +118,10 @@
         }
 
         .haiku-line {
-            font-size: 1em; /* Use em to scale with the base font size */
+            font-size: 16px;
             color: black;
             background-color: white;
-            padding: 4px 5px; /* Increase padding */
+            padding: 0 4px; /* Reduced padding */
             margin: 0; /* Remove margin between lines */
             margin-bottom: 3px; /* Add spacing between lines */
             border-radius: 0;
@@ -134,7 +130,7 @@
         }
 
         #instruction-text {
-            font-size: 1.125em; /* Slightly larger than base font size */
+            font-size: 18px;
             color: #333;
             margin-bottom: 24px; /* Maintain consistent spacing */
             text-align: center;
@@ -492,7 +488,7 @@
                 
                 ctx.textBaseline = 'middle'; // Change to 'middle' for vertical centering
                 ctx.font = `${16 * scale}px Arial`; // Adjust font size for higher resolution
-                haikuLines.forEach((line, index) => {
+                haikuLines.forEach((line) => {
                     const rect = line.getBoundingClientRect();
                     const cameraRect = cameraBlock.getBoundingClientRect();
                     
@@ -506,7 +502,7 @@
                     // Draw text
                     ctx.fillStyle = 'black';
                     const textY = y + (rect.height * scale / 2); // Center text vertically
-                    ctx.fillText(line.innerText, x + 10 * scale, textY);
+                    ctx.fillText(line.innerText, x + 4 * scale, textY); // Adjust text position for padding
                 });
 
                 shareCanvas(canvas);
@@ -531,4 +527,3 @@
     </script>
 </body>
 </html>
-
