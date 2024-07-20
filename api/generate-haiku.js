@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
         {
           role: "user",
           content: [
-            { type: "text", text: "Generate a haiku very specifically based on this image capturing the little details:" },
+            { type: "text", text: "Generate a haiku very specifically based on this image capturing the little details. Make it cute and fun:" },
             {
               type: "image_url",
               image_url: {
